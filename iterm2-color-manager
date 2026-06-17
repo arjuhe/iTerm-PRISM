@@ -1,0 +1,366 @@
+#!/usr/bin/env python3
+
+import iterm2
+import argparse
+import sys
+import random
+import plistlib
+import os
+from typing import List, Optional, Dict, Tuple
+
+# Color codes for terminal output
+GREEN = "\033[32m"
+RESET = "\033[0m"
+
+def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
+    """Convert hex color string to RGB tuple."""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def create_color_block(hex_color: str) -> str:
+    """Create a colored block for a single color using 24-bit true color."""
+    try:
+        r, g, b = hex_to_rgb(hex_color)
+        return f"\033[38;2;{r};{g};{b}m■\033[0m"
+    except (ValueError, AttributeError):
+        return "?"
+
+async def get_preset_colors(connection, preset_name: str) -> Optional[Dict[str, str]]:
+    """Get the colors from a preset (ANSI 0-7 only)."""
+    try:
+        preset = await iterm2.ColorPreset.async_get(connection, preset_name)
+        if not preset or not preset.values:
+            return None
+
+        # Extract ANSI 0-7 colors from the preset
+        colors = {}
+        for color_obj in preset.values:
+            # Look for ANSI 0-7 colors
+            if color_obj.key.startswith("Ansi") and color_obj.key.endswith("Color"):
+                # Extract the number: "Ansi 0 Color" -> "0"
+                try:
+                    ansi_num = int(color_obj.key.split()[1])
+                    if ansi_num <= 7:
+                        # Convert float RGB to int and then to hex
+                        r = int(round(color_obj.red))
+                        g = int(round(color_obj.green))
+                        b = int(round(color_obj.blue))
+                        hex_color = f"#{r:02x}{g:02x}{b:02x}"
+                        colors[color_obj.key] = hex_color
+                except (ValueError, IndexError):
+                    pass
+
+        return colors if colors else None
+    except Exception:
+        return None
+
+def format_color_grid(colors: Dict[str, str], count: int = 8) -> str:
+    """Format colors as a grid of blocks."""
+    if not colors:
+        return ""
+
+    color_list = list(colors.values())[:count]
+    blocks = " ".join(create_color_block(color) for color in color_list)
+    return blocks
+
+async def get_current_session(connection) -> Optional[iterm2.Session]:
+    """Get the current session (the one running this script)."""
+    app = await iterm2.async_get_app(connection)
+    if app and app.current_terminal_window:
+        window = app.current_terminal_window
+        if window and window.current_tab:
+            tab = window.current_tab
+            if tab and tab.current_session:
+                return tab.current_session
+    return None
+
+def get_session_id() -> str:
+    """Get the current iTerm2 session ID from environment variable."""
+    return os.environ.get('ITERM_SESSION_ID', 'unknown')
+
+def get_cached_preset() -> str:
+    """Get the last preset set for this session from a temp file."""
+    session_id = get_session_id()
+    if session_id == 'unknown':
+        return "(default)"
+
+    cache_file = os.path.expanduser(f"~/.iterm2_color_preset_{session_id}")
+    try:
+        if os.path.exists(cache_file):
+            with open(cache_file, 'r') as f:
+                return f.read().strip()
+    except Exception:
+        pass
+    return "(default)"
+
+def cache_preset(preset_name: str) -> None:
+    """Cache the applied preset for this session."""
+    session_id = get_session_id()
+    if session_id == 'unknown':
+        return
+
+    cache_file = os.path.expanduser(f"~/.iterm2_color_preset_{session_id}")
+    try:
+        with open(cache_file, 'w') as f:
+            f.write(preset_name)
+    except Exception:
+        pass
+
+async def get_current_preset(connection, session: iterm2.Session) -> str:
+    """Get the current color preset name for the session."""
+    return get_cached_preset()
+
+async def list_all_presets(connection) -> List[str]:
+    """Get all available color presets."""
+    presets = await iterm2.ColorPreset.async_get_list(connection)
+    return sorted(presets) if presets else []
+
+async def set_color_preset(connection, session: iterm2.Session, preset_name: str) -> bool:
+    """Apply a color preset to the session."""
+    try:
+        preset = await iterm2.ColorPreset.async_get(connection, preset_name)
+        if not preset:
+            return False
+        profile = await session.async_get_profile()
+        if profile:
+            await profile.async_set_color_preset(preset)
+            cache_preset(preset_name)
+            return True
+    except Exception:
+        pass
+    return False
+
+async def get_next_preset(connection, session: iterm2.Session, direction: str) -> Optional[str]:
+    """Get and apply the next/previous preset, or a random one."""
+    try:
+        presets = await list_all_presets(connection)
+        if not presets:
+            return None
+
+        current = await get_current_preset(connection, session)
+
+        if direction == "random":
+            new_preset = random.choice(presets)
+        elif direction == "next":
+            if current == "(default)" or current not in presets:
+                new_preset = presets[0]
+            else:
+                current_idx = presets.index(current)
+                new_preset = presets[(current_idx + 1) % len(presets)]
+        elif direction == "previous":
+            if current == "(default)" or current not in presets:
+                new_preset = presets[-1]
+            else:
+                current_idx = presets.index(current)
+                new_preset = presets[(current_idx - 1) % len(presets)]
+        else:
+            return None
+
+        if await set_color_preset(connection, session, new_preset):
+            return new_preset
+    except Exception:
+        pass
+    return None
+
+async def display_all_samples(connection) -> int:
+    """Display color samples for all available presets."""
+    try:
+        presets = await list_all_presets(connection)
+        if not presets:
+            print("No color presets found.", file=sys.stderr)
+            return 1
+
+        print("Color samples for all available presets:\n")
+
+        for preset_name in presets:
+            colors = await get_preset_colors(connection, preset_name)
+            if colors:
+                color_grid = format_color_grid(colors, count=8)
+                print(f"{preset_name:30} {color_grid}")
+            else:
+                print(f"{preset_name:30} (unable to load colors)")
+
+        return 0
+    except Exception as e:
+        print(f"Error displaying color samples: {e}", file=sys.stderr)
+        return 1
+
+async def main_async(connection, args):
+    """Main async function to handle iTerm2 connection."""
+
+    try:
+        session = await get_current_session(connection)
+        if not session:
+            print("Error: Could not find current iTerm2 session.", file=sys.stderr)
+            return 1
+
+        if args.sample:
+            return await display_all_samples(connection)
+
+        elif args.current:
+            preset = await get_current_preset(connection, session)
+            print(f"Current color preset: {preset}")
+            return 0
+
+        elif args.list:
+            presets = await list_all_presets(connection)
+            if not presets:
+                print("No color presets found.", file=sys.stderr)
+                return 1
+            print("Available color presets:")
+            current = await get_current_preset(connection, session)
+            for preset in presets:
+                if preset == current:
+                    marker = f"{GREEN}*{RESET} "
+                else:
+                    marker = "  "
+                print(f"{marker}{preset}")
+            return 0
+
+        elif args.set:
+            presets = await list_all_presets(connection)
+            if args.set not in presets:
+                print(f"Error: Color preset '{args.set}' not found.", file=sys.stderr)
+                print(f"Run '{sys.argv[0]} --list' to see available presets.", file=sys.stderr)
+                return 1
+            if await set_color_preset(connection, session, args.set):
+                print(f"Color preset changed to: {args.set}")
+                colors = await get_preset_colors(connection, args.set)
+                if colors:
+                    color_grid = format_color_grid(colors, count=8)
+                    print(f"Color sample:           {color_grid}")
+                return 0
+            else:
+                print(f"Error: Failed to set color preset '{args.set}'.", file=sys.stderr)
+                return 1
+
+        elif args.next:
+            new_preset = await get_next_preset(connection, session, "next")
+            if new_preset:
+                print(f"Color preset changed to: {new_preset}")
+                colors = await get_preset_colors(connection, new_preset)
+                if colors:
+                    color_grid = format_color_grid(colors, count=8)
+                    print(f"Color sample:           {color_grid}")
+                return 0
+            else:
+                print("Error: Could not rotate to next preset.", file=sys.stderr)
+                return 1
+
+        elif args.previous:
+            new_preset = await get_next_preset(connection, session, "previous")
+            if new_preset:
+                print(f"Color preset changed to: {new_preset}")
+                colors = await get_preset_colors(connection, new_preset)
+                if colors:
+                    color_grid = format_color_grid(colors, count=8)
+                    print(f"Color sample:           {color_grid}")
+                return 0
+            else:
+                print("Error: Could not rotate to previous preset.", file=sys.stderr)
+                return 1
+
+        elif args.random:
+            new_preset = await get_next_preset(connection, session, "random")
+            if new_preset:
+                print(f"Color preset changed to: {new_preset}")
+                colors = await get_preset_colors(connection, new_preset)
+                if colors:
+                    color_grid = format_color_grid(colors, count=8)
+                    print(f"Color sample:           {color_grid}")
+                return 0
+            else:
+                print("Error: Could not apply random preset.", file=sys.stderr)
+                return 1
+
+        else:
+            return 0
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+def main():
+    """Parse arguments and run the script."""
+    parser = argparse.ArgumentParser(
+        description="Manage iTerm2 color presets for the current session.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s --current              Show current color preset
+  %(prog)s --list                 List all available color presets
+  %(prog)s --set Andromeda        Set color preset to Andromeda
+  %(prog)s --next                 Rotate to next color preset
+  %(prog)s --random               Apply a random color preset
+  %(prog)s --sample               Display color samples for all presets
+        """
+    )
+
+    parser.add_argument(
+        "-c", "--current",
+        action="store_true",
+        help="Show the current color preset for the active session"
+    )
+
+    parser.add_argument(
+        "-l", "--list",
+        action="store_true",
+        help="List all available color presets"
+    )
+
+    parser.add_argument(
+        "-s", "--set",
+        metavar="PRESET",
+        help="Set the color preset to the specified name"
+    )
+
+    parser.add_argument(
+        "-n", "--next",
+        action="store_true",
+        help="Rotate to the next color preset (alphabetical order)"
+    )
+
+    parser.add_argument(
+        "-p", "--previous",
+        action="store_true",
+        help="Rotate to the previous color preset (alphabetical order)"
+    )
+
+    parser.add_argument(
+        "-r", "--random",
+        action="store_true",
+        help="Apply a random color preset"
+    )
+
+    parser.add_argument(
+        "-sa", "--sample",
+        action="store_true",
+        help="Display color samples for all available presets"
+    )
+
+    args = parser.parse_args()
+
+    # If no arguments provided, show help
+    if not any([args.current, args.list, args.set, args.next, args.previous, args.random, args.sample]):
+        parser.print_help()
+        return 0
+
+    # Run the async main function using iterm2's async runner
+    try:
+        async def wrapper(connection):
+            return await main_async(connection, args)
+        return iterm2.run_until_complete(wrapper)
+    except KeyboardInterrupt:
+        print("\nInterrupted.", file=sys.stderr)
+        return 130
+    except ImportError:
+        print("Error: iterm2 Python library not found.", file=sys.stderr)
+        print("Install it with: pip3 install iterm2", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())
