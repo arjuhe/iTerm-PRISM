@@ -18,24 +18,98 @@
 ### Prerequisites
 - iTerm2 (macOS)
 - Python 3.7+
-- iTerm2 Python library
 
-### Setup
+### One-Liner Installation (End Users)
+
+Once published to GitHub, install with a single command:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/USER/prism/main/install.sh)"
+```
+
+This will automatically:
+- Check prerequisites (Python 3.7+, macOS, iTerm2)
+- Download the PRISM script
+- Install the `iterm2` Python package
+- Copy `prism` to `~/.local/bin/`
+- Configure your PATH
+
+After installation, reload your shell:
+```bash
+source ~/.bash_profile  # or ~/.zshrc
+prism --help
+```
+
+### Local Installation (Developers)
+
+Clone and install from source:
+
+```bash
+cd ~/proj/prism
+./install.sh
+```
+
+This uses the local `prism` script in your repository instead of downloading.
+
+### Manual Installation
+
+If you prefer to set up manually:
 
 1. Install the iTerm2 Python library:
 ```bash
-pip3 install iterm2
+pip3 install --user iterm2
 ```
 
 2. Copy the script to your bin directory:
 ```bash
-cp prism ~/bin/
-chmod +x ~/bin/prism
+mkdir -p ~/.local/bin
+cp prism ~/.local/bin/
+chmod +x ~/.local/bin/prism
 ```
 
-Or add the project directory to your PATH:
+3. Add to PATH (if not already configured):
 ```bash
-export PATH="~/proj/prism:$PATH"
+echo 'export PATH="${HOME}/.local/bin:$PATH"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+### Uninstall
+
+To remove PRISM:
+
+```bash
+~/.local/bin/uninstall.sh
+```
+
+Or if you have the source repository:
+
+```bash
+./uninstall.sh
+```
+
+### Troubleshooting
+
+**"command not found: prism"**
+
+Ensure `~/.local/bin` is in your PATH:
+
+```bash
+echo $PATH | grep ".local/bin"
+```
+
+If missing, add to your shell profile and reload:
+
+```bash
+echo 'export PATH="${HOME}/.local/bin:$PATH"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+**"iterm2 Python library not found"**
+
+Install manually:
+
+```bash
+pip3 install --user iterm2
 ```
 
 ## Usage
@@ -131,6 +205,8 @@ Changes are applied instantly using the iTerm2 Python API. No restart required.
 ```
 ~/proj/prism/
 ├── prism                    # Main script
+├── install.sh               # Installation script (local & remote)
+├── uninstall.sh             # Uninstallation script
 ├── README.md                # This file
 └── CLAUDE.md               # Development notes
 ```
@@ -141,6 +217,19 @@ Changes are applied instantly using the iTerm2 Python API. No restart required.
 
 ```bash
 python3 ~/proj/prism/prism --help
+```
+
+### Testing the installer
+
+For development/testing:
+
+```bash
+# Clean install
+rm ~/.local/bin/prism
+./install.sh
+
+# Test idempotency (run again)
+./install.sh
 ```
 
 ### Adding to shell profile

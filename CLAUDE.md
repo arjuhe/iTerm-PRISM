@@ -11,6 +11,8 @@ This file provides guidance to Claude Code when working with this repository.
 ```
 ~/proj/prism/
 ├── prism                           # Main Python script (~500 lines)
+├── install.sh                      # Installation script (dual-mode: local & remote)
+├── uninstall.sh                    # Uninstallation script
 ├── README.md                       # User documentation
 ├── CLAUDE.md                       # This file (developer guidance)
 ├── docs/                           # Project documentation
@@ -23,6 +25,7 @@ This file provides guidance to Claude Code when working with this repository.
 ├── .claude/                        # Private developer notes (git-ignored)
 │   ├── plans/                      # Local implementation plans
 │   ├── decisions/                  # Local decision scratch space
+│   ├── bugs/                       # Bug tracking with RCA documentation
 │   └── settings.local.json
 └── .git/                          # Git repository
 ```
@@ -67,6 +70,34 @@ The script is a single-file Python 3 application using the iTerm2 Python API.
 | `--random` | Picks random | Color sample display |
 | `--sample` | Shows all with samples | Displays all 32 presets |
 
+## Installation System
+
+PRISM includes a Homebrew-style installation system with dual-mode support:
+
+**Local mode** (developers):
+```bash
+cd ~/proj/prism && ./install.sh
+```
+Uses the local `prism` script from the repository.
+
+**Remote mode** (end users, when published):
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/USER/prism/main/install.sh)"
+```
+Automatically downloads the `prism` script and installs it.
+
+The installer handles:
+- Prerequisite validation (Python 3.7+, macOS, iTerm2)
+- Dependency installation (iterm2 package)
+- Binary placement (~/.local/bin/prism)
+- PATH configuration with user confirmation
+- Installation verification
+
+To uninstall:
+```bash
+./uninstall.sh  # or ~/.local/bin/uninstall.sh if installed remotely
+```
+
 ## Common Development Tasks
 
 ### Testing a Command
@@ -75,6 +106,17 @@ The script is a single-file Python 3 application using the iTerm2 Python API.
 python3 ~/proj/prism/prism --help
 python3 ~/proj/prism/prism --list
 python3 ~/proj/prism/prism --set Andromeda
+```
+
+### Testing the Installer
+
+```bash
+# Clean install (local mode)
+rm ~/.local/bin/prism
+./install.sh
+
+# Test idempotency
+./install.sh  # Should skip already-installed components
 ```
 
 ### Adding a New Command
@@ -192,6 +234,10 @@ Local to your development environment (git-ignored):
 
 - `.claude/plans/` - Your personal implementation plans
 - `.claude/decisions/` - Exploratory decision documents
+- `.claude/bugs/` - Bug reports with Root Cause Analysis (RCA)
+  - See `.claude/bugs/README.md` for bug tracking system documentation
+  - Each bug is documented with symptoms, root cause, and fix status
+  - Use the template in `README.md` when adding new bugs
 - `.claude/settings.local.json` - Your local Claude Code configuration
 
 These are not committed to keep private notes separate from public documentation.
