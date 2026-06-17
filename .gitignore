@@ -31,3 +31,6 @@ env/
 *.swo
 *~
 .DS_Store
+
+# Claude Code local configuration and notes (private to developer)
+.claude/

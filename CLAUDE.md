@@ -10,10 +10,21 @@ This file provides guidance to Claude Code when working with this repository.
 
 ```
 ~/proj/prism/
-├── prism                    # Main Python script (~330 lines)
-├── README.md                # User documentation
-├── CLAUDE.md               # This file
-└── .git/                    # Git repository
+├── prism                           # Main Python script (~500 lines)
+├── README.md                       # User documentation
+├── CLAUDE.md                       # This file (developer guidance)
+├── docs/                           # Project documentation
+│   ├── plans/                      # Implementation plans (committed)
+│   ├── decisions/                  # Design decisions (committed)
+│   └── README.md
+├── test/
+│   └── presets/
+│       └── TestPreset.itermcolors # Test color preset for development
+├── .claude/                        # Private developer notes (git-ignored)
+│   ├── plans/                      # Local implementation plans
+│   ├── decisions/                  # Local decision scratch space
+│   └── settings.local.json
+└── .git/                          # Git repository
 ```
 
 ## Script Architecture
@@ -154,6 +165,36 @@ python3 prism --list | grep '\*'
 - **Error handling:** Try-except blocks with graceful fallbacks
 - **Output:** Use `print()` for normal output, `print(..., file=sys.stderr)` for errors
 - **Color codes:** ANSI codes defined as module-level constants (GREEN, RESET)
+
+## Plans and Decisions
+
+This project uses two documentation systems for tracking work:
+
+### Public Documentation (`docs/`)
+Committed to the repository for all developers:
+
+- **Plans** (`docs/plans/`) - Implementation plans for completed and planned features
+  - Context and motivation
+  - Step-by-step implementation approach
+  - Files to modify with specific locations
+  - Verification steps for testing
+
+- **Decisions** (`docs/decisions/`) - Architectural and design decisions
+  - The choice made and why
+  - Rationale and implications
+  - Alternatives that were considered
+  - Related decisions and references
+
+See `docs/README.md` for details.
+
+### Private Notes (`.claude/`)
+Local to your development environment (git-ignored):
+
+- `.claude/plans/` - Your personal implementation plans
+- `.claude/decisions/` - Exploratory decision documents
+- `.claude/settings.local.json` - Your local Claude Code configuration
+
+These are not committed to keep private notes separate from public documentation.
 
 ## Future Enhancements
 
