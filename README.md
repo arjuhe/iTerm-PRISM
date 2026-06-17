@@ -1,6 +1,6 @@
-# iTerm2 Color Manager
+# PRISM
 
-A command-line utility to manage, preview, and rotate through iTerm2 color presets with visual color samples.
+**P**reset **R**endering **I**nteractive **S**ession **M**anager — A command-line utility to manage, preview, and rotate through iTerm2 color presets with visual color samples.
 
 ## Features
 
@@ -29,13 +29,13 @@ pip3 install iterm2
 
 2. Copy the script to your bin directory:
 ```bash
-cp iterm2-color-manager ~/bin/
-chmod +x ~/bin/iterm2-color-manager
+cp prism ~/bin/
+chmod +x ~/bin/prism
 ```
 
 Or add the project directory to your PATH:
 ```bash
-export PATH="~/proj/iterm2-color-manager:$PATH"
+export PATH="~/proj/prism:$PATH"
 ```
 
 ## Usage
@@ -44,17 +44,17 @@ export PATH="~/proj/iterm2-color-manager:$PATH"
 
 Show current color preset:
 ```bash
-iterm2-color-manager --current
+prism --current
 ```
 
 List all available presets (32 total):
 ```bash
-iterm2-color-manager --list
+prism --list
 ```
 
 Set a specific preset:
 ```bash
-iterm2-color-manager --set Andromeda
+prism --set Andromeda
 # Output:
 # Color preset changed to: Andromeda
 # Color sample:           ■ ■ ■ ■ ■ ■ ■ ■
@@ -62,35 +62,35 @@ iterm2-color-manager --set Andromeda
 
 Rotate to next preset (alphabetical):
 ```bash
-iterm2-color-manager --next
+prism --next
 ```
 
 Rotate to previous preset:
 ```bash
-iterm2-color-manager --previous
+prism --previous
 ```
 
 Apply a random preset:
 ```bash
-iterm2-color-manager --random
+prism --random
 ```
 
 Browse all presets with color samples:
 ```bash
-iterm2-color-manager --sample
+prism --sample
 ```
 
 ### Short Flags
 
 All commands support short flags:
 ```bash
-iterm2-color-manager -c       # --current
-iterm2-color-manager -l       # --list
-iterm2-color-manager -s PRESET # --set PRESET
-iterm2-color-manager -n       # --next
-iterm2-color-manager -p       # --previous
-iterm2-color-manager -r       # --random
-iterm2-color-manager -sa      # --sample
+prism -c       # --current
+prism -l       # --list
+prism -s PRESET # --set PRESET
+prism -n       # --next
+prism -p       # --previous
+prism -r       # --random
+prism -sa      # --sample
 ```
 
 ## Available Presets (32 total)
@@ -129,8 +129,8 @@ Changes are applied instantly using the iTerm2 Python API. No restart required.
 ## Project Structure
 
 ```
-~/proj/iterm2-color-manager/
-├── iterm2-color-manager     # Main script
+~/proj/prism/
+├── prism                    # Main script
 ├── README.md                # This file
 └── CLAUDE.md               # Development notes
 ```
@@ -140,24 +140,24 @@ Changes are applied instantly using the iTerm2 Python API. No restart required.
 ### Running from source
 
 ```bash
-python3 ~/proj/iterm2-color-manager/iterm2-color-manager --help
+python3 ~/proj/prism/prism --help
 ```
 
 ### Adding to shell profile
 
 For bash:
 ```bash
-export PATH="~/proj/iterm2-color-manager:$PATH"
+export PATH="~/proj/prism:$PATH"
 source ~/.bash_profile
 ```
 
 For zsh:
 ```bash
-export PATH="~/proj/iterm2-color-manager:$PATH"
+export PATH="~/proj/prism:$PATH"
 source ~/.zshrc
 ```
 
-Then you can use `iterm2-color-manager` from anywhere.
+Then you can use `prism` from anywhere.
 
 ## Dependencies
 

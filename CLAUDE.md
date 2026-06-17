@@ -4,16 +4,16 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Project Overview
 
-**iterm2-color-manager** is a Python CLI utility for managing iTerm2 color presets. It provides commands to list, set, rotate through, and preview color schemes with visual color sample displays.
+**PRISM** (**P**reset **R**endering **I**nteractive **S**ession **M**anager) is a Python CLI utility for managing iTerm2 color presets. It provides commands to list, set, rotate through, and preview color schemes with visual color sample displays.
 
 ## Repository Structure
 
 ```
-~/proj/iterm2-color-manager/
-├── iterm2-color-manager     # Main Python script (~330 lines)
+~/proj/prism/
+├── prism                    # Main Python script (~330 lines)
 ├── README.md                # User documentation
 ├── CLAUDE.md               # This file
-└── .git/                    # Git repository (optional)
+└── .git/                    # Git repository
 ```
 
 ## Script Architecture
@@ -61,9 +61,9 @@ The script is a single-file Python 3 application using the iTerm2 Python API.
 ### Testing a Command
 
 ```bash
-python3 ~/proj/iterm2-color-manager/iterm2-color-manager --help
-python3 ~/proj/iterm2-color-manager/iterm2-color-manager --list
-python3 ~/proj/iterm2-color-manager/iterm2-color-manager --set Andromeda
+python3 ~/proj/prism/prism --help
+python3 ~/proj/prism/prism --list
+python3 ~/proj/prism/prism --set Andromeda
 ```
 
 ### Adding a New Command
@@ -100,10 +100,10 @@ pip3 install iterm2
 
 | File | Purpose |
 |------|---------|
-| `iterm2-color-manager` | Main script entry point |
+| `prism` | Main script entry point |
 | `README.md` | User-facing documentation |
 | `CLAUDE.md` | Development notes (this file) |
-| `~/.iterm2_color_preset_{SESSION_ID}` | Runtime session cache (created by script) |
+| `~/.prism_preset_{SESSION_ID}` | Runtime session cache (created by script) |
 
 ## Environment Variables Used
 
@@ -127,23 +127,23 @@ Before committing changes:
 
 ```bash
 # Test help
-python3 iterm2-color-manager --help
+python3 prism --help
 
 # Test basic commands
-python3 iterm2-color-manager --current
-python3 iterm2-color-manager --list
-python3 iterm2-color-manager --sample
+python3 prism --current
+python3 prism --list
+python3 prism --sample
 
 # Test color changes
-python3 iterm2-color-manager --set Batman
-python3 iterm2-color-manager --next
-python3 iterm2-color-manager --random
+python3 prism --set Batman
+python3 prism --next
+python3 prism --random
 
 # Test error handling
-python3 iterm2-color-manager --set NonExistentPreset
+python3 prism --set NonExistentPreset
 
 # Verify marker updates
-python3 iterm2-color-manager --list | grep '\*'
+python3 prism --list | grep '\*'
 ```
 
 ## Code Style & Conventions
@@ -167,7 +167,7 @@ Possible improvements:
 
 ## Related Projects
 
-The original script was created in `~/proj/home/sbin/iterm2-color-manager` and has been moved to this standalone project directory for better isolation and reusability.
+The original script was created in `~/proj/home/sbin/iterm2-color-manager` and has been moved to this standalone project directory as **PRISM** for better isolation and reusability.
 
 **Reference scripts in ~/proj/home:**
 - `sbin/iterm2_random_tabs` - Similar iTerm2 API usage patterns
