@@ -259,12 +259,6 @@ install_prism() {
 configure_path() {
     print_step "Configuring PATH"
 
-    # Check if already in PATH
-    if echo "$PATH" | grep -q "${INSTALL_DIR}"; then
-        print_success "${INSTALL_DIR} already in PATH"
-        return 0
-    fi
-
     # Find the appropriate shell profile
     local profile=""
     for candidate in "${SHELL_PROFILES[@]}"; do
@@ -282,9 +276,24 @@ configure_path() {
 
     print_info "Shell profile detected: $profile"
 
-    # Check if PATH line already exists in profile
+    # Check if PATH line already exists in profile (most reliable check)
     if grep -q "export PATH=.*${INSTALL_DIR}" "$profile"; then
-        print_warning "PATH entry exists but not active in current shell"
+        print_success "${INSTALL_DIR} already configured in $profile"
+
+        # Warn if multiple entries exist
+        local entry_count
+        entry_count=$(grep -c "export PATH=.*${INSTALL_DIR}" "$profile" || echo 0)
+        if [[ $entry_count -gt 1 ]]; then
+            print_warning "Multiple PATH entries detected ($entry_count found)"
+            print_info "Consider cleaning up duplicate entries in $profile"
+        fi
+
+        return 0
+    fi
+
+    # Also check if already in current PATH
+    if echo "$PATH" | grep -q ":${INSTALL_DIR}:" || echo "$PATH" | grep -q "^${INSTALL_DIR}:"; then
+        print_warning "PATH entry exists but not in profile - may need to reload shell"
         print_info "Run: ${BOLD}source $profile${RESET}"
         return 0
     fi
