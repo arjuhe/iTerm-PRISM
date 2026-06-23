@@ -15,17 +15,15 @@ This file provides guidance to Claude Code when working with this repository.
 ├── uninstall.sh                    # Uninstallation script
 ├── README.md                       # User documentation
 ├── CLAUDE.md                       # This file (developer guidance)
-├── docs/                           # Project documentation
-│   ├── plans/                      # Implementation plans (committed)
-│   ├── decisions/                  # Design decisions (committed)
-│   └── README.md
 ├── test/
 │   └── presets/
 │       └── TestPreset.itermcolors # Test color preset for development
 ├── .claude/                        # Private developer notes (git-ignored)
-│   ├── plans/                      # Local implementation plans
-│   ├── decisions/                  # Local decision scratch space
+│   ├── plans/                      # Implementation plans and design docs
+│   ├── decisions/                  # Architectural decisions
 │   ├── bugs/                       # Bug tracking with RCA documentation
+│   ├── skills/                     # Custom testing skills
+│   ├── agents/                     # Custom agent definitions
 │   └── settings.local.json
 └── .git/                          # Git repository
 ```
@@ -210,37 +208,30 @@ python3 prism --list | grep '\*'
 
 ## Plans and Decisions
 
-This project uses two documentation systems for tracking work:
+All project documentation is stored in `.claude/` (git-ignored):
 
-### Public Documentation (`docs/`)
-Committed to the repository for all developers:
-
-- **Plans** (`docs/plans/`) - Implementation plans for completed and planned features
+- **Plans** (`.claude/plans/`) - Implementation plans for completed and planned features
   - Context and motivation
   - Step-by-step implementation approach
   - Files to modify with specific locations
   - Verification steps for testing
 
-- **Decisions** (`docs/decisions/`) - Architectural and design decisions
+- **Decisions** (`.claude/decisions/`) - Architectural and design decisions
   - The choice made and why
   - Rationale and implications
   - Alternatives that were considered
   - Related decisions and references
 
-See `docs/README.md` for details.
-
-### Private Notes (`.claude/`)
-Local to your development environment (git-ignored):
-
-- `.claude/plans/` - Your personal implementation plans
-- `.claude/decisions/` - Exploratory decision documents
-- `.claude/bugs/` - Bug reports with Root Cause Analysis (RCA)
+- **Bugs** (`.claude/bugs/`) - Bug reports with Root Cause Analysis (RCA)
   - See `.claude/bugs/README.md` for bug tracking system documentation
   - Each bug is documented with symptoms, root cause, and fix status
   - Use the template in `README.md` when adding new bugs
-- `.claude/settings.local.json` - Your local Claude Code configuration
 
-These are not committed to keep private notes separate from public documentation.
+- **Skills** (`.claude/skills/`) - Custom testing and automation scripts
+
+- **Agents** (`.claude/agents/`) - Specialized agent definitions for development tasks
+
+These files are not committed to git, keeping development notes private and the repository lightweight.
 
 ## Future Enhancements
 
