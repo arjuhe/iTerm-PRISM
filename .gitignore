@@ -34,3 +34,4 @@ env/
 
 # Claude Code local configuration and notes (private to developer)
 .claude/
+.ssh/
