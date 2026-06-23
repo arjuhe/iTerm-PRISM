@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# PRISM Installer
+# iTerm-PRISM Installer
 # Homebrew-style installation for iTerm2 color preset manager
 #
 # Usage:
@@ -27,7 +27,7 @@ else
     MODE="remote"
     SOURCE_SCRIPT=""
     # Update this URL when published to GitHub
-    PRISM_DOWNLOAD_URL="https://raw.githubusercontent.com/USER/prism/main/prism"
+    PRISM_DOWNLOAD_URL="https://raw.githubusercontent.com/USER/iTerm-PRISM/main/prism"
 fi
 
 # Shell profile detection (priority order)
@@ -71,8 +71,8 @@ print_banner() {
 
 ${BOLD}${CYAN}╔════════════════════════════════════════╗${RESET}
 ${BOLD}${CYAN}║                                        ║${RESET}
-${BOLD}${CYAN}║            PRISM Installer             ║${RESET}
-${BOLD}${CYAN}║   Preset Rendering Interactive         ║${RESET}
+${BOLD}${CYAN}║        iTerm-PRISM Installer           ║${RESET}
+${BOLD}${CYAN}║     Preset Rendering Iterm             ║${RESET}
 ${BOLD}${CYAN}║       Session Manager for iTerm2       ║${RESET}
 ${BOLD}${CYAN}║                                        ║${RESET}
 ${BOLD}${CYAN}╚════════════════════════════════════════╝${RESET}
@@ -106,7 +106,7 @@ print_info() {
 
 check_macos() {
     if [[ "$(uname -s)" != "Darwin" ]]; then
-        print_error "PRISM requires macOS (detected: $(uname -s))"
+        print_error "iTerm-PRISM requires macOS (detected: $(uname -s))"
         return 1
     fi
     print_success "macOS detected"
@@ -142,18 +142,18 @@ check_pip() {
 check_iterm2() {
     if [[ ! -d "/Applications/iTerm.app" ]]; then
         print_error "iTerm2 not detected at /Applications/iTerm.app"
-        print_info "PRISM requires iTerm2: https://iterm2.com"
+        print_info "iTerm-PRISM requires iTerm2: https://iterm2.com"
         return 1
     fi
     print_success "iTerm2 detected"
 }
 
 # =============================================================================
-# Download PRISM (Remote Mode Only)
+# Download iTerm-PRISM (Remote Mode Only)
 # =============================================================================
 
 download_prism() {
-    print_step "Downloading PRISM script"
+    print_step "Downloading iTerm-PRISM script"
 
     if [[ -z "$PRISM_DOWNLOAD_URL" ]]; then
         print_error "Download URL not configured"
@@ -169,7 +169,7 @@ download_prism() {
 
     # Download script
     if ! curl -fsSL "$PRISM_DOWNLOAD_URL" -o "$SOURCE_SCRIPT" 2>/dev/null; then
-        print_error "Failed to download PRISM script"
+        print_error "Failed to download iTerm-PRISM script"
         rm -rf "$temp_dir"
         return 1
     fi
@@ -184,7 +184,7 @@ download_prism() {
     # Register cleanup on exit
     trap "rm -rf $temp_dir" EXIT
 
-    print_success "PRISM script downloaded"
+    print_success "iTerm-PRISM script downloaded"
 }
 
 # =============================================================================
@@ -217,7 +217,7 @@ install_iterm2_package() {
 # =============================================================================
 
 install_prism() {
-    print_step "Installing PRISM executable"
+    print_step "Installing iTerm-PRISM executable"
 
     # Verify source exists
     if [[ ! -f "$SOURCE_SCRIPT" ]]; then
@@ -234,7 +234,7 @@ install_prism() {
     # Check if already installed
     local dest="${INSTALL_DIR}/${SCRIPT_NAME}"
     if [[ -f "$dest" ]]; then
-        print_warning "PRISM already installed at $dest"
+        print_warning "iTerm-PRISM already installed at $dest"
         echo ""
         read -p "Overwrite? (y/N): " -n 1 -r
         echo ""
@@ -316,7 +316,7 @@ configure_path() {
 
     # Add to shell profile
     echo "" >> "$profile"
-    echo "# Added by PRISM installer" >> "$profile"
+    echo "# Added by iTerm-PRISM installer" >> "$profile"
     echo "export PATH=\"\${HOME}/.local/bin:\$PATH\"" >> "$profile"
 
     print_success "Added to $profile"
@@ -378,7 +378,7 @@ print_completion() {
 
 ${GREEN}${BOLD}╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
-║  ✓ PRISM installed successfully!                          ║
+║  ✓ iTerm-PRISM installed successfully!                    ║
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝${RESET}
 
@@ -388,7 +388,7 @@ ${BOLD}Next Steps:${RESET}
 
    ${CYAN}source ~/.bash_profile${RESET}
 
-2. Verify PRISM is accessible:
+2. Verify iTerm-PRISM is accessible:
 
    ${CYAN}prism --help${RESET}
 
@@ -401,7 +401,7 @@ ${BOLD}Next Steps:${RESET}
 
 ${BOLD}Documentation:${RESET}
 
-   Full guide: https://github.com/USER/prism#readme
+   Full guide: https://github.com/USER/iTerm-PRISM#readme
 
 ${BOLD}Uninstall:${RESET}
 

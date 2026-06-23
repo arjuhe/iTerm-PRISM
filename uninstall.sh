@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# PRISM Uninstaller
-# Clean removal of PRISM and optional cleanup
+# iTerm-PRISM Uninstaller
+# Clean removal of iTerm-PRISM and optional cleanup
 #
 
 set -e
@@ -50,7 +50,7 @@ setup_colors() {
 
 print_banner() {
     echo ""
-    echo "${BOLD}${RED}PRISM Uninstaller${RESET}"
+    echo "${BOLD}${RED}iTerm-PRISM Uninstaller${RESET}"
     echo ""
 }
 
@@ -75,7 +75,7 @@ print_error() {
 # =============================================================================
 
 remove_binary() {
-    print_step "Removing PRISM executable"
+    print_step "Removing iTerm-PRISM executable"
 
     local prism_path="${INSTALL_DIR}/${SCRIPT_NAME}"
 
@@ -127,8 +127,8 @@ remove_path_entry() {
             # Create backup
             cp "$profile" "${profile}.backup"
 
-            # Remove PRISM-added lines
-            sed -i.bak '/# Added by PRISM installer/d' "$profile"
+            # Remove iTerm-PRISM-added lines
+            sed -i.bak '/# Added by iTerm-PRISM installer/d' "$profile"
             sed -i.bak '/export PATH=.*\.local\/bin/d' "$profile"
 
             # Clean up sed backup files
@@ -171,7 +171,7 @@ main() {
     print_banner
 
     # Confirmation
-    echo "${BOLD}This will remove PRISM from your system.${RESET}"
+    echo "${BOLD}This will remove iTerm-PRISM from your system.${RESET}"
     echo ""
     read -p "Continue? (y/N): " -n 1 -r
     echo ""
@@ -196,9 +196,9 @@ main() {
 
     echo "${GREEN}${BOLD}Uninstall complete!${RESET}"
     echo ""
-    echo "To reinstall PRISM, run:"
+    echo "To reinstall iTerm-PRISM, run:"
     echo ""
-    echo "  ${CYAN}/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/USER/prism/main/install.sh)\"${RESET}"
+    echo "  ${CYAN}/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/USER/iTerm-PRISM/main/install.sh)\"${RESET}"
     echo ""
 }
 

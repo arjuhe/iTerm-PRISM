@@ -4,12 +4,12 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Project Overview
 
-**PRISM** (**P**reset **R**endering **I**nteractive **S**ession **M**anager) is a Python CLI utility for managing iTerm2 color presets. It provides commands to list, set, rotate through, and preview color schemes with visual color sample displays.
+**iTerm-PRISM** (**P**reset **R**endering **I**term **S**ession **M**anager) is a Python CLI utility for managing iTerm2 color presets. It provides commands to list, set, rotate through, and preview color schemes with visual color sample displays.
 
 ## Repository Structure
 
 ```
-~/proj/prism/
+~/proj/arjuhe/iTerm-PRISM/
 ├── prism                           # Main Python script (~500 lines)
 ├── install.sh                      # Installation script (dual-mode: local & remote)
 ├── uninstall.sh                    # Uninstallation script
@@ -72,17 +72,17 @@ The script is a single-file Python 3 application using the iTerm2 Python API.
 
 ## Installation System
 
-PRISM includes a Homebrew-style installation system with dual-mode support:
+iTerm-PRISM includes a Homebrew-style installation system with dual-mode support:
 
 **Local mode** (developers):
 ```bash
-cd ~/proj/prism && ./install.sh
+cd ~/proj/arjuhe/iTerm-PRISM && ./install.sh
 ```
 Uses the local `prism` script from the repository.
 
 **Remote mode** (end users, when published):
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/USER/prism/main/install.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/USER/iTerm-PRISM/main/install.sh)"
 ```
 Automatically downloads the `prism` script and installs it.
 
@@ -103,9 +103,9 @@ To uninstall:
 ### Testing a Command
 
 ```bash
-python3 ~/proj/prism/prism --help
-python3 ~/proj/prism/prism --list
-python3 ~/proj/prism/prism --set Andromeda
+python3 ~/proj/arjuhe/iTerm-PRISM/prism --help
+python3 ~/proj/arjuhe/iTerm-PRISM/prism --list
+python3 ~/proj/arjuhe/iTerm-PRISM/prism --set Andromeda
 ```
 
 ### Testing the Installer
@@ -254,7 +254,7 @@ Possible improvements:
 
 ## Related Projects
 
-The original script was created in `~/proj/home/sbin/iterm2-color-manager` and has been moved to this standalone project directory as **PRISM** for better isolation and reusability.
+The original script was created in `~/proj/home/sbin/iterm2-color-manager` and has been moved to this standalone project directory as **iTerm-PRISM** for better isolation and reusability.
 
 **Reference scripts in ~/proj/home:**
 - `sbin/iterm2_random_tabs` - Similar iTerm2 API usage patterns

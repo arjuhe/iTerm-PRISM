@@ -1,6 +1,6 @@
-# PRISM
+# iTerm-PRISM
 
-**P**reset **R**endering **I**nteractive **S**ession **M**anager — A command-line utility to manage, preview, and rotate through iTerm2 color presets with visual color samples.
+**P**reset **R**endering **I**term **S**ession **M**anager — A command-line utility to manage, preview, and rotate through iTerm2 color presets with visual color samples.
 
 ## Features
 
@@ -24,12 +24,12 @@
 Once published to GitHub, install with a single command:
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/USER/prism/main/install.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/USER/iTerm-PRISM/main/install.sh)"
 ```
 
 This will automatically:
 - Check prerequisites (Python 3.7+, macOS, iTerm2)
-- Download the PRISM script
+- Download the iTerm-PRISM script
 - Install the `iterm2` Python package
 - Copy `prism` to `~/.local/bin/`
 - Configure your PATH
@@ -45,7 +45,7 @@ prism --help
 Clone and install from source:
 
 ```bash
-cd ~/proj/prism
+cd ~/proj/arjuhe/iTerm-PRISM
 ./install.sh
 ```
 
@@ -75,7 +75,7 @@ source ~/.bash_profile
 
 ### Uninstall
 
-To remove PRISM:
+To remove iTerm-PRISM:
 
 ```bash
 ~/.local/bin/uninstall.sh
@@ -203,7 +203,7 @@ Changes are applied instantly using the iTerm2 Python API. No restart required.
 ## Project Structure
 
 ```
-~/proj/prism/
+~/proj/arjuhe/iTerm-PRISM/
 ├── prism                    # Main script
 ├── install.sh               # Installation script (local & remote)
 ├── uninstall.sh             # Uninstallation script
@@ -216,7 +216,7 @@ Changes are applied instantly using the iTerm2 Python API. No restart required.
 ### Running from source
 
 ```bash
-python3 ~/proj/prism/prism --help
+python3 ~/proj/arjuhe/iTerm-PRISM/prism --help
 ```
 
 ### Testing the installer
@@ -236,13 +236,13 @@ rm ~/.local/bin/prism
 
 For bash:
 ```bash
-export PATH="~/proj/prism:$PATH"
+export PATH="~/proj/arjuhe/iTerm-PRISM:$PATH"
 source ~/.bash_profile
 ```
 
 For zsh:
 ```bash
-export PATH="~/proj/prism:$PATH"
+export PATH="~/proj/arjuhe/iTerm-PRISM:$PATH"
 source ~/.zshrc
 ```
 
