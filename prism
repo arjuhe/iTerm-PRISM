@@ -7,6 +7,7 @@ import random
 import plistlib
 import os
 import shutil
+import webbrowser
 from typing import List, Optional, Dict, Tuple
 
 # Color codes for terminal output
@@ -402,11 +403,12 @@ def main():
         epilog="""
 Examples:
   %(prog)s --current              Show current color preset
-  %(prog)s --list                 List all available color presets
+  %(prog)s --list                 List all installed color presets
   %(prog)s --set Andromeda        Set color preset to Andromeda
   %(prog)s --next                 Rotate to next color preset
   %(prog)s --random               Apply a random color preset
   %(prog)s --sample               Display color samples for all presets
+  %(prog)s --browse               Open the online iTerm2 color scheme gallery
   %(prog)s --install test.itermcolors    Install a color preset from file
   %(prog)s --install test.itermcolors -f Install without confirmation
   %(prog)s --delete Andromeda     Delete a color preset with confirmation
@@ -423,7 +425,7 @@ Examples:
     parser.add_argument(
         "-l", "--list",
         action="store_true",
-        help="List all available color presets"
+        help="List all installed color presets"
     )
 
     parser.add_argument(
@@ -457,6 +459,12 @@ Examples:
     )
 
     parser.add_argument(
+        "-b", "--browse",
+        action="store_true",
+        help="Open the online iTerm2 color scheme gallery in a web browser"
+    )
+
+    parser.add_argument(
         "-d", "--delete",
         metavar="PRESET",
         help="Delete a color preset (with confirmation)"
@@ -477,8 +485,15 @@ Examples:
     args = parser.parse_args()
 
     # If no arguments provided, show help
-    if not any([args.current, args.list, args.set, args.next, args.previous, args.random, args.sample, args.delete, args.install]):
+    if not any([args.current, args.list, args.set, args.next, args.previous, args.random, args.sample, args.delete, args.install, args.browse]):
         parser.print_help()
+        return 0
+
+    # Browse the online gallery (no iTerm2 connection needed)
+    if args.browse:
+        gallery_url = "https://iterm2colorschemes.com/"
+        print(f"Opening iTerm2 color scheme gallery: {gallery_url}")
+        webbrowser.open(gallery_url)
         return 0
 
     # Run the async main function using iterm2's async runner
