@@ -457,7 +457,7 @@ def main():
     prog = colorize("%(prog)s", RAINBOW_CYAN, bold=True)
 
     parser = PrismArgumentParser(
-        description=f"{title} - Preset Rendering Interactive Session Manager. Manage iTerm2 color presets for the current session.\n{version_banner}",
+        description=f"{title} - Preset Rendering Interactive Session Manager.\n{version_banner}",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 {examples_header}
