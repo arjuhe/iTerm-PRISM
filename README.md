@@ -154,6 +154,11 @@ Browse all presets with color samples:
 prism --sample
 ```
 
+Show version and build info:
+```bash
+prism --version
+```
+
 ### Short Flags
 
 All commands support short flags:
@@ -165,6 +170,7 @@ prism -n       # --next
 prism -p       # --previous
 prism -r       # --random
 prism -sa      # --sample
+prism -v       # --version
 ```
 
 ## Available Presets (32 total)

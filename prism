@@ -13,6 +13,18 @@ from typing import List, Optional, Dict, Tuple
 GREEN = "\033[32m"
 RESET = "\033[0m"
 
+# Version metadata — bump by hand as part of every release/feature commit:
+#   1. bump __version__ per semver (major.minor.patch)
+#   2. set BUILD to `git rev-parse --short HEAD` of the commit you're building on
+#   3. set BUILD_DATE to today (YYYY-MM-DD)
+# These are NOT derived automatically (see .claude/decisions/001-manual-version-stamping.md) —
+# they will go stale if forgotten. That's an accepted tradeoff of staying a hermetic,
+# dependency-free single file with no install-time build step.
+__version__ = "0.1.0"
+BUILD = "66e0ba8"
+BUILD_DATE = "2026-09-14"
+DEV_MESSAGE = "Built with more coffee than tests."
+
 def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
     """Convert hex color string to RGB tuple."""
     hex_color = hex_color.lstrip('#')
@@ -399,7 +411,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="PRISM - Preset Rendering Interactive Session Manager. Manage iTerm2 color presets for the current session.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
+        epilog=f"""
+{__version__} (build {BUILD}, {BUILD_DATE}) — {DEV_MESSAGE}
+
 Examples:
   %(prog)s --current              Show current color preset
   %(prog)s --list                 List all available color presets
@@ -472,6 +486,12 @@ Examples:
         "-f", "--force",
         action="store_true",
         help="Skip confirmation when deleting or installing a preset"
+    )
+
+    parser.add_argument(
+        "-v", "--version",
+        action="version",
+        version=f"%(prog)s {__version__} (build {BUILD}, {BUILD_DATE})\n{DEV_MESSAGE}"
     )
 
     args = parser.parse_args()
