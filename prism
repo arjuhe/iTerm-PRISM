@@ -449,7 +449,7 @@ def main():
         colorize("M", RAINBOW_BLUE, bold=True)
     )
     version_banner = (
-        f"{colorize(__version__, RAINBOW_GOLD, bold=True)} "
+        f"{colorize(f'v{__version__}', RAINBOW_GOLD, bold=True)} "
         f"{colorize(f'(build {BUILD}, {BUILD_DATE})', RAINBOW_MUTED)} "
         f"— {colorize(DEV_MESSAGE, RAINBOW_CYAN)}"
     )
@@ -537,7 +537,7 @@ def main():
     parser.add_argument(
         "-v", "--version",
         action="version",
-        version=f"%(prog)s {__version__} (build {BUILD}, {BUILD_DATE})\n{DEV_MESSAGE}"
+        version=f"%(prog)s v{__version__} (build {BUILD}, {BUILD_DATE})\n{DEV_MESSAGE}"
     )
 
     args = parser.parse_args()
