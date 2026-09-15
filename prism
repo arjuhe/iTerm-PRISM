@@ -13,6 +13,17 @@ from typing import List, Optional, Dict, Tuple
 GREEN = "\033[32m"
 RESET = "\033[0m"
 
+# "12-bit Rainbow" iTerm2 preset palette, used to theme --help output.
+# Source: https://github.com/mbadolato/iTerm2-Color-Schemes (schemes/12-bit Rainbow.itermcolors)
+RAINBOW_RED = "#c06060"     # Ansi 9
+RAINBOW_ORANGE = "#e09040"  # Ansi 3
+RAINBOW_GOLD = "#e0d000"    # Ansi 11
+RAINBOW_GREEN = "#90d050"   # Ansi 10
+RAINBOW_BLUE = "#3060b0"    # Ansi 4
+RAINBOW_CYAN = "#00b0c0"    # Ansi 12
+RAINBOW_PURPLE = "#603090"  # Ansi 5
+RAINBOW_MUTED = "#685656"   # Ansi 8
+
 # Version metadata — bump by hand as part of every release/feature commit:
 #   1. bump __version__ per semver (major.minor.patch)
 #   2. set BUILD to `git rev-parse --short HEAD` of the commit you're building on
@@ -37,6 +48,12 @@ def create_color_block(hex_color: str) -> str:
         return f"\033[38;2;{r};{g};{b}m■\033[0m"
     except (ValueError, AttributeError):
         return "?"
+
+def colorize(text: str, hex_color: str, bold: bool = False) -> str:
+    """Wrap text in 24-bit true-color ANSI codes, optionally bold."""
+    r, g, b = hex_to_rgb(hex_color)
+    prefix = "\033[1m" if bold else ""
+    return f"{prefix}\033[38;2;{r};{g};{b}m{text}{RESET}"
 
 async def get_preset_colors(connection, preset_name: str) -> Optional[Dict[str, str]]:
     """Get the colors from a preset (ANSI 0-7 only)."""
@@ -424,21 +441,36 @@ class PrismArgumentParser(argparse.ArgumentParser):
 
 def main():
     """Parse arguments and run the script."""
+    title = (
+        colorize("P", RAINBOW_RED, bold=True) +
+        colorize("R", RAINBOW_ORANGE, bold=True) +
+        colorize("I", RAINBOW_GOLD, bold=True) +
+        colorize("S", RAINBOW_GREEN, bold=True) +
+        colorize("M", RAINBOW_BLUE, bold=True)
+    )
+    version_banner = (
+        f"{colorize(__version__, RAINBOW_GOLD, bold=True)} "
+        f"{colorize(f'(build {BUILD}, {BUILD_DATE})', RAINBOW_MUTED)} "
+        f"— {colorize(DEV_MESSAGE, RAINBOW_CYAN)}"
+    )
+    examples_header = colorize("Examples:", RAINBOW_PURPLE, bold=True)
+    prog = colorize("%(prog)s", RAINBOW_CYAN, bold=True)
+
     parser = PrismArgumentParser(
-        description=f"PRISM - Preset Rendering Interactive Session Manager. Manage iTerm2 color presets for the current session.\n{__version__} (build {BUILD}, {BUILD_DATE}) — {DEV_MESSAGE}",
+        description=f"{title} - Preset Rendering Interactive Session Manager. Manage iTerm2 color presets for the current session.\n{version_banner}",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  %(prog)s --current              Show current color preset
-  %(prog)s --list                 List all available color presets
-  %(prog)s --set Andromeda        Set color preset to Andromeda
-  %(prog)s --next                 Rotate to next color preset
-  %(prog)s --random               Apply a random color preset
-  %(prog)s --sample               Display color samples for all presets
-  %(prog)s --install test.itermcolors    Install a color preset from file
-  %(prog)s --install test.itermcolors -f Install without confirmation
-  %(prog)s --delete Andromeda     Delete a color preset with confirmation
-  %(prog)s --delete Andromeda -f  Delete a color preset without confirmation
+        epilog=f"""
+{examples_header}
+  {prog} --current              Show current color preset
+  {prog} --list                 List all available color presets
+  {prog} --set Andromeda        Set color preset to Andromeda
+  {prog} --next                 Rotate to next color preset
+  {prog} --random               Apply a random color preset
+  {prog} --sample               Display color samples for all presets
+  {prog} --install test.itermcolors    Install a color preset from file
+  {prog} --install test.itermcolors -f Install without confirmation
+  {prog} --delete Andromeda     Delete a color preset with confirmation
+  {prog} --delete Andromeda -f  Delete a color preset without confirmation
         """
     )
 
