@@ -7,12 +7,22 @@ import random
 import plistlib
 import os
 import shutil
+import subprocess
 import webbrowser
+import tempfile
+import urllib.request
+import urllib.error
+import urllib.parse
 from typing import List, Optional, Dict, Tuple
 
 # Color codes for terminal output
 GREEN = "\033[32m"
 RESET = "\033[0m"
+
+UPSTREAM_BASE_URL = "https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/"
+DOWNLOAD_TIMEOUT_SECONDS = 15
+DOWNLOAD_MAX_BYTES = 5 * 1024 * 1024  # .itermcolors are plists, normally a few KB
+DOWNLOAD_USER_AGENT = "prism-cli/1.0"
 
 def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
     """Convert hex color string to RGB tuple."""
@@ -127,6 +137,14 @@ async def set_color_preset(connection, session: iterm2.Session, preset_name: str
         if profile:
             await profile.async_set_color_preset(preset)
             cache_preset(preset_name)
+            if profile.use_separate_colors_for_light_and_dark_mode:
+                print(
+                    "Warning: This profile has 'Use Separate Colors for Light and Dark Mode' "
+                    "enabled. Most presets only define one color scheme, so the change may not "
+                    "be visible until you disable that option in iTerm2 Preferences > Profiles "
+                    "> Colors.",
+                    file=sys.stderr,
+                )
             return True
     except Exception:
         pass
@@ -187,6 +205,24 @@ async def display_all_samples(connection) -> int:
         print(f"Error displaying color samples: {e}", file=sys.stderr)
         return 1
 
+async def register_preset_in_defaults(preset_name: str, preset_data: dict) -> bool:
+    """Register a color preset with iTerm2's prefs so it appears in --list/--set immediately."""
+    try:
+        xml = plistlib.dumps(preset_data, fmt=plistlib.FMT_XML).decode()
+        fragment = xml[xml.index("<dict>"):xml.rindex("</dict>") + len("</dict>")]
+        subprocess.run(
+            ["defaults", "write", "com.googlecode.iterm2", "Custom Color Presets",
+             "-dict-add", preset_name, fragment],
+            check=True, capture_output=True, text=True,
+        )
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to register preset with iTerm2: {e.stderr.strip()}", file=sys.stderr)
+        return False
+    except Exception as e:
+        print(f"Error: Failed to register preset with iTerm2: {e}", file=sys.stderr)
+        return False
+
 async def install_color_preset(file_path: str, force: bool = False) -> bool:
     """Install a .itermcolors file to iTerm2's preset directory."""
     try:
@@ -236,33 +272,125 @@ async def install_color_preset(file_path: str, force: bool = False) -> bool:
         # Copy file
         try:
             shutil.copy2(file_path, dest_path)
-            return True
         except Exception as e:
             print(f"Error: Failed to copy file: {e}", file=sys.stderr)
             return False
+
+        # Register with iTerm2 so it's usable immediately (--list/--set/--sample)
+        return await register_preset_in_defaults(preset_name, preset_data)
 
     except Exception as e:
         print(f"Error installing preset: {e}", file=sys.stderr)
         return False
 
-async def delete_color_preset(preset_name: str) -> bool:
-    """Delete a color preset from the file system."""
+async def install_remote_color_preset(url: str, preset_name: str, force: bool = False) -> bool:
+    """Download a .itermcolors file from a URL and install it via install_color_preset."""
     try:
+        request = urllib.request.Request(url, headers={"User-Agent": DOWNLOAD_USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response:
+                data = response.read(DOWNLOAD_MAX_BYTES + 1)
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                print(
+                    f"Error: '{preset_name}' was not found. Check the exact spelling and "
+                    f"capitalization at https://iterm2colorschemes.com/",
+                    file=sys.stderr,
+                )
+            else:
+                print(f"Error: Failed to download preset (HTTP {e.code}): {e.reason}", file=sys.stderr)
+            return False
+        except urllib.error.URLError as e:
+            print(f"Error: Network error while downloading preset: {e.reason}", file=sys.stderr)
+            return False
+        except TimeoutError:
+            print(f"Error: Timed out downloading preset from '{url}'.", file=sys.stderr)
+            return False
+
+        if len(data) > DOWNLOAD_MAX_BYTES:
+            print(
+                f"Error: Downloaded file exceeds the maximum allowed size "
+                f"({DOWNLOAD_MAX_BYTES // (1024 * 1024)} MB).",
+                file=sys.stderr,
+            )
+            return False
+
+        print(f"Downloaded {len(data)} bytes. Installing ...")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = os.path.join(tmp_dir, f"{preset_name}.itermcolors")
+            try:
+                with open(tmp_path, "wb") as f:
+                    f.write(data)
+            except Exception as e:
+                print(f"Error: Could not write downloaded preset to a temporary file: {e}", file=sys.stderr)
+                return False
+            return await install_color_preset(tmp_path, force=force)
+    except Exception as e:
+        print(f"Error installing remote preset: {e}", file=sys.stderr)
+        return False
+
+async def unregister_preset_from_defaults(preset_name: str) -> Optional[bool]:
+    """Remove a preset's entry from iTerm2's Custom Color Presets prefs, if present.
+
+    Returns True if an entry was removed, False if none was found, None on error.
+    """
+    try:
+        export = subprocess.run(
+            ["defaults", "export", "com.googlecode.iterm2", "-"],
+            check=True, capture_output=True,
+        )
+        domain_data = plistlib.loads(export.stdout)
+        custom_presets = domain_data.get("Custom Color Presets", {})
+
+        if preset_name not in custom_presets:
+            return False
+
+        del custom_presets[preset_name]
+
+        if custom_presets:
+            xml = plistlib.dumps(custom_presets, fmt=plistlib.FMT_XML).decode()
+            fragment = xml[xml.index("<dict>"):xml.rindex("</dict>") + len("</dict>")]
+            subprocess.run(
+                ["defaults", "write", "com.googlecode.iterm2", "Custom Color Presets", fragment],
+                check=True, capture_output=True, text=True,
+            )
+        else:
+            subprocess.run(
+                ["defaults", "delete", "com.googlecode.iterm2", "Custom Color Presets"],
+                check=True, capture_output=True, text=True,
+            )
+        return True
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.decode() if isinstance(e.stderr, bytes) else e.stderr
+        print(f"Error: Failed to unregister preset from iTerm2: {stderr.strip()}", file=sys.stderr)
+        return None
+    except Exception as e:
+        print(f"Error: Failed to unregister preset from iTerm2: {e}", file=sys.stderr)
+        return None
+
+async def delete_color_preset(preset_name: str) -> bool:
+    """Delete a color preset from the file system and iTerm2's prefs."""
+    try:
+        removed = False
+
         presets_dir = os.path.expanduser("~/Library/Application Support/iTerm2/DynamicProfiles")
         preset_file = os.path.join(presets_dir, f"{preset_name}.itermcolors")
-
         if os.path.exists(preset_file):
             os.remove(preset_file)
-            return True
+            removed = True
 
         presets_dir_old = os.path.expanduser("~/Library/Application Support/iTerm2/ColorPresets")
         preset_file_old = os.path.join(presets_dir_old, f"{preset_name}.itermcolors")
-
         if os.path.exists(preset_file_old):
             os.remove(preset_file_old)
-            return True
+            removed = True
 
-        return False
+        registration_result = await unregister_preset_from_defaults(preset_name)
+        if registration_result is None:
+            return False
+
+        return removed or registration_result
     except Exception as e:
         print(f"Error deleting preset: {e}", file=sys.stderr)
         return False
@@ -356,8 +484,30 @@ async def main_async(connection, args):
                 return 1
 
         elif args.install:
-            if await install_color_preset(args.install, force=args.force):
+            if isinstance(args.install, str):
+                install_source = args.install
                 preset_name = os.path.splitext(os.path.basename(args.install))[0]
+                success = await install_color_preset(args.install, force=args.force)
+            elif args.url:
+                parsed = urllib.parse.urlparse(args.url)
+                preset_name = os.path.splitext(urllib.parse.unquote(os.path.basename(parsed.path)))[0]
+                if not preset_name:
+                    print(f"Error: Could not determine a preset name from URL '{args.url}'.", file=sys.stderr)
+                    return 1
+                install_source = args.url
+                print(f"Downloading '{preset_name}' from {args.url} ...")
+                success = await install_remote_color_preset(args.url, preset_name, force=args.force)
+            elif args.upstream:
+                preset_name = args.upstream
+                url = f"{UPSTREAM_BASE_URL}{urllib.parse.quote(args.upstream)}.itermcolors"
+                install_source = url
+                print(f"Fetching '{preset_name}' from the iTerm2-Color-Schemes gallery ...")
+                success = await install_remote_color_preset(url, preset_name, force=args.force)
+            else:
+                print("Error: --install requires a FILE path, --url URL, or --upstream NAME.", file=sys.stderr)
+                return 1
+
+            if success:
                 print(f"Color preset '{preset_name}' installed successfully.")
                 colors = await get_preset_colors(connection, preset_name)
                 if colors:
@@ -365,7 +515,7 @@ async def main_async(connection, args):
                     print(f"Color sample:           {color_grid}")
                 return 0
             else:
-                print(f"Error: Failed to install color preset from '{args.install}'.", file=sys.stderr)
+                print(f"Error: Failed to install color preset from '{install_source}'.", file=sys.stderr)
                 return 1
 
         elif args.delete:
@@ -411,6 +561,8 @@ Examples:
   %(prog)s --browse               Open the online iTerm2 color scheme gallery
   %(prog)s --install test.itermcolors    Install a color preset from file
   %(prog)s --install test.itermcolors -f Install without confirmation
+  %(prog)s --install --upstream "Dracula"           Install a scheme by name (recommended)
+  %(prog)s --install --url "https://x.com/a.itermcolors"  Install from a direct URL
   %(prog)s --delete Andromeda     Delete a color preset with confirmation
   %(prog)s --delete Andromeda -f  Delete a color preset without confirmation
         """
@@ -473,7 +625,23 @@ Examples:
     parser.add_argument(
         "-i", "--install",
         metavar="FILE",
-        help="Install a .itermcolors file to iTerm2's preset directory"
+        nargs="?",
+        const=True,
+        help="Install a .itermcolors file to iTerm2's preset directory. "
+             "Combine with --upstream (recommended) or --url to install from the internet."
+    )
+
+    parser.add_argument(
+        "--upstream",
+        metavar="NAME",
+        help="Recommended: install a color scheme by name from the iTerm2-Color-Schemes "
+             "gallery, e.g. \"iTerm2 Solarized Dark\" (use with --install)"
+    )
+
+    parser.add_argument(
+        "--url",
+        metavar="URL",
+        help="Install a .itermcolors file downloaded from a direct URL (use with --install)"
     )
 
     parser.add_argument(
@@ -483,6 +651,13 @@ Examples:
     )
 
     args = parser.parse_args()
+
+    if args.url and args.upstream:
+        parser.error("--url and --upstream cannot be used together. Choose one (--upstream is recommended).")
+    if isinstance(args.install, str) and (args.url or args.upstream):
+        parser.error("--install FILE cannot be combined with --url or --upstream.")
+    if (args.url or args.upstream) and not args.install:
+        parser.error("--url and --upstream can only be used together with --install.")
 
     # If no arguments provided, show help
     if not any([args.current, args.list, args.set, args.next, args.previous, args.random, args.sample, args.delete, args.install, args.browse]):

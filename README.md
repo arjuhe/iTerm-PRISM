@@ -154,6 +154,37 @@ Browse all presets with color samples:
 prism --sample
 ```
 
+### Installing Presets
+
+Install a local `.itermcolors` file:
+```bash
+prism --install test.itermcolors
+prism --install test.itermcolors -f   # skip overwrite confirmation
+```
+
+Install a scheme by name from the [iTerm2-Color-Schemes](https://github.com/mbadolato/iTerm2-Color-Schemes) gallery (recommended for remote installs):
+```bash
+prism --install --upstream "Dracula"
+```
+
+Install from a direct URL:
+```bash
+prism --install --url "https://example.com/MyScheme.itermcolors"
+```
+
+`--url` and `--upstream` are mutually exclusive and only valid together with `--install`. Add `-f`/`--force` to skip the overwrite confirmation prompt on any install.
+
+Delete an installed preset:
+```bash
+prism --delete Andromeda
+prism --delete Andromeda -f   # skip confirmation
+```
+
+Open the online color scheme gallery in your browser:
+```bash
+prism --browse
+```
+
 ### Short Flags
 
 All commands support short flags:
